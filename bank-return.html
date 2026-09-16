@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Domos — returning from your bank</title>
+<style>
+  body { margin: 0; background: #f4f6fa; color: #16213a; font: 16px/1.6 -apple-system, "Segoe UI", Inter, Roboto, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 80px 20px; text-align: center; }
+  .brand { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #2b6be6; color: #fff; font-weight: 700; font-size: 20px; margin-bottom: 18px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { color: #5b6b82; }
+  a { color: #2b6be6; }
+  code { background: #edf0f4; padding: 2px 6px; border-radius: 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">D</div>
+  <h1>Returning to Domos…</h1>
+  <p id="msg">One moment.</p>
+</main>
+<script>
+// Banks only redirect to https pages. Domos runs on http://localhost, so it
+// sends the bank here and encodes where to go back inside `state`:
+//   state = "domosbank-<random>~<base64url(origin)>"
+// The whole query string (code, state, error…) is forwarded unchanged.
+(function () {
+  var q = location.search || '';
+  var params = new URLSearchParams(q);
+  var state = params.get('state') || params.get('ref') || '';
+  var target = 'http://localhost:8551/';
+  var tilde = state.indexOf('~');
+  if (tilde > 0) {
+    try {
+      var b64 = state.slice(tilde + 1).replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var origin = atob(b64);
+      // only Domos itself: a local page, or any https page
+      if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(origin) || /^https:\/\/[^\s/?#]+\/?$/i.test(origin)) {
+        target = origin.replace(/\/?$/, '/');
+      }
+    } catch (e) { /* keep the default */ }
+  }
+  var url = target + q;
+  document.getElementById('msg').innerHTML = 'If nothing happens, <a href="' + url.replace(/"/g, '&quot;') + '">continue to Domos</a>.';
+  location.replace(url);
+})();
+</script>
+</body>
+</html>
