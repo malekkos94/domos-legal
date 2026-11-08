@@ -22,10 +22,13 @@
   <p id="msg">One moment.</p>
 </main>
 <script>
-// Banks only redirect to https pages. Domos runs on http://localhost, so it
-// sends the bank here and encodes where to go back inside `state`:
+// Banks only redirect to https pages. Domos run on this computer is on
+// http://localhost, so it sends the bank here and encodes where to go back
+// inside `state`:
 //   state = "domosbank-<random>~<base64url(origin)>"
-// The whole query string (code, state, error…) is forwarded unchanged.
+// The whole query string (code, state, error…) is forwarded unchanged, and
+// only to http://localhost or http://127.0.0.1: the bank's code must never
+// reach another site. Domos on https needs no bounce: the bank returns to it.
 (function () {
   var q = location.search || '';
   var params = new URLSearchParams(q);
@@ -37,8 +40,8 @@
       var b64 = state.slice(tilde + 1).replace(/-/g, '+').replace(/_/g, '/');
       while (b64.length % 4) b64 += '=';
       var origin = atob(b64);
-      // only Domos itself: a local page, or any https page
-      if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(origin) || /^https:\/\/[^\s/?#]+\/?$/i.test(origin)) {
+      // only a Domos on this computer
+      if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(origin)) {
         target = origin.replace(/\/?$/, '/');
       }
     } catch (e) { /* keep the default */ }
